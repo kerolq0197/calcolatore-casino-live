@@ -1,0 +1,89 @@
+value) || 0;
+        const rtp = (parseFloat(document.getElementById('rtpSlot').value) || 0) / 100;
+        const bonus = parseFloat(document.getElementById('bonusOttenuto').value) || 0;
+        
+        const rigioco = document.getElementById('rigiocoBonus').checked;
+        const freeSpin = document.getElementById('freeSpin').checked;
+
+        // --- LOGICA MATEMATICA DEL MATCHED BETTING CASINO ---
+        // Perdita attesa sul giocato = Totale Giocato * (1 - RTP)
+        const perditaGiocato = totaleGiocato * (1 - rtp);
+        
+        let valoreRealeBonus = bonus;
+        // Se il bonus va rigiocato (WR), perde valore in base all'RTP
+        if (rigioco && bonus > 0) {
+            // Assumiamo un rigioco standard di 1x per l'atteso base, modificabile se necessario
+            valoreRealeBonus = bonus * rtp; 
+        }
+
+        // Calcolo del Profitto Atteso (Valore Bonus - Perdita stimata durante la qualificante)
+        let profittoAtteso = valoreRealeBonus - perditaGiocato;
+        
+        // Correzione indicativa se sono free spin
+        if (freeSpin) {
+            profittoAtteso = (bonus * rtp) - perditaGiocato;
+        }
+
+        // Aggiorna Interfaccia Profitto Atteso
+        const profitElement = document.getElementById('profittoAtteso');
+        profitElement.innerText = €${profittoAtteso.toFixed(2)};
+        
+        if(profittoAtteso < 0) {
+            profitElement.style.backgroundColor = "#ef4444"; // Rosso se negativo
+        } else {
+            profitElement.style.backgroundColor = "#2ebd59"; // Verde se positivo
+        }
+
+        // --- SCENARI (Stima approssimativa da Matched Betting) ---
+        let peggiore = -perditaGiocato;
+        let intermedio = profittoAtteso;
+
+        document.getElementById('scenarioPeggiore').innerText = €${peggiore.toFixed(2)};
+        document.getElementById('scenarioIntermedio').innerText = €${intermedio.toFixed(2)};
+
+        // --- VERDETTO VALUTAZIONE ---
+        const verdettoDiv = document.getElementById('verdetto');
+        if (profittoAtteso <= 0) {
+            verdettoDiv.innerText = "POCO CONVENIENTE";
+            verdettoDiv.style.backgroundColor = "#fcd34d"; // Giallo/Arancio come in foto
+            verdettoDiv.style.color = "#333";
+        } else if (profittoAtteso > 0 && profittoAtteso < 5) {
+            verdettoDiv.innerText = "MEDIAMENTE CONVENIENTE";
+            verdettoDiv.style.backgroundColor = "#3b82f6"; // Blu
+            verdettoDiv.style.color = "#fff";
+        } else {
+            verdettoDiv.innerText = "MOLTO CONVENIENTE";
+            verdettoDiv.style.backgroundColor = "#2ebd59"; // Verde
+            verdettoDiv.style.color = "#fff";
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('totaleGiocato').value = 0;
+        document.getElementById('rtpSlot').value = 95;
+        document.getElementById('bonusOttenuto').value = 0;
+        document.getElementById('rigiocoBonus').checked = false;
+        document.getElementById('freeSpin').checked = false;
+        calcola();
+    }
+
+    function inviaA_Telegram() {
+        const totale = document.getElementById('totaleGiocato').value;
+        const profitto = document.getElementById('profittoAtteso').innerText;
+        const verdetto = document.getElementById('verdetto').innerText;
+        
+        const testoFinale = 🎰 *Calcolo Promo Slot*\n• Giocato: ${totale}€\n• *Profitto Atteso: ${profitto}*\n• Esito: ${verdetto};
+        
+        if(tg && tg.sendData) {
+            tg.sendData(testoFinale);
+            tg.close();
+        } else {
+            alert("Dati pronti per Telegram:\n" + testoFinale);
+        }
+    }
+
+    // Esegui un primo calcolo all'avvio
+    window.onload = calcola;
+</script>
+</body>
+</html>
